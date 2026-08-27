@@ -2,8 +2,60 @@ import 'dotenv/config';
 import { createServer } from 'node:http';
 import { randomUUID } from 'node:crypto';
 import { PrismaPg } from '@prisma/adapter-pg';
+import { z } from 'zod';
 import { Prisma, PrismaClient } from './generated/prisma/client.js';
-import { getFile, uploadFile } from './storage.js';
+import { getFile, isMissingObjectError, uploadFile } from './storage.js';
+
+const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
+const articleSchema = z.object({
+  slug: z.string().trim().min(1),
+  title: z.string().trim().min(1),
+  content: z.record(z.string(), z.unknown()),
+});
+const articleUpdateSchema = z
+  .object({
+    title: z.string().trim().min(1).optional(),
+    content: z.record(z.string(), z.unknown()).optional(),
+  })
+  .refine((data) => data.title !== undefined || data.content !== undefined);
+
+function sendJson(response: import('node:http').ServerResponse, status: number, data: unknown) {
+  response.writeHead(status, { 'Content-Type': 'application/json' });
+  response.end(JSON.stringify(data));
+}
+
+function toJsonObject(data: Record<string, unknown>): Prisma.InputJsonObject {
+  return data as Prisma.InputJsonObject;
+}
+
+async function readImageBody(request: import('node:http').IncomingMessage) {
+  const contentLength = Number(request.headers['content-length']);
+
+  if (Number.isFinite(contentLength) && contentLength > MAX_IMAGE_SIZE_BYTES) {
+    request.resume();
+    return null;
+  }
+
+  const chunks: Buffer[] = [];
+  let size = 0;
+  let tooLarge = false;
+
+  for await (const chunk of request) {
+    const buffer = Buffer.from(chunk);
+    size += buffer.length;
+
+    if (size > MAX_IMAGE_SIZE_BYTES) {
+      tooLarge = true;
+      continue;
+    }
+
+    if (!tooLarge) {
+      chunks.push(buffer);
+    }
+  }
+
+  return tooLarge ? null : Buffer.concat(chunks);
+}
 
 const adapter = new PrismaPg({
   connectionString: process.env.DATABASE_URL,
@@ -33,7 +85,7 @@ const server = createServer(async (request, response) => {
       body += chunk;
     }
 
-    let data: any;
+    let data: unknown;
 
     try {
       data = JSON.parse(body);
@@ -46,28 +98,19 @@ const server = createServer(async (request, response) => {
       return;
     }
 
-    if (
-      typeof data.slug !== 'string' ||
-      data.slug.trim() === '' ||
-      typeof data.title !== 'string' ||
-      data.title.trim() === '' ||
-      typeof data.content !== 'object' ||
-      data.content === null
-    ) {
-      response.writeHead(400, {
-        'Content-Type': 'application/json',
-      });
+    const parsedData = articleSchema.safeParse(data);
 
-      response.end(JSON.stringify({ message: 'Invalid article data' }));
+    if (!parsedData.success) {
+      sendJson(response, 400, { message: 'Invalid article data' });
       return;
     }
 
     try {
       const article = await prisma.article.create({
         data: {
-          slug: data.slug.trim(),
-          title: data.title.trim(),
-          content: data.content,
+          slug: parsedData.data.slug,
+          title: parsedData.data.title,
+          content: toJsonObject(parsedData.data.content),
         },
       });
 
@@ -114,13 +157,14 @@ const server = createServer(async (request, response) => {
       return;
     }
 
-    const chunks: Buffer[] = [];
+    const body = await readImageBody(request);
 
-    for await (const chunk of request) {
-      chunks.push(Buffer.from(chunk));
+    if (body === null) {
+      sendJson(response, 413, {
+        message: 'Image must not exceed 5 MiB',
+      });
+      return;
     }
-
-    const body = Buffer.concat(chunks);
 
     if (body.length === 0) {
       response.writeHead(400, {
@@ -133,7 +177,13 @@ const server = createServer(async (request, response) => {
 
     const key = `${randomUUID()}.${extension}`;
 
-    await uploadFile(key, body, contentType ?? '');
+    try {
+      await uploadFile(key, body, contentType ?? '');
+    } catch (error) {
+      console.error('Failed to upload image to S3', error);
+      sendJson(response, 502, { message: 'Image storage is unavailable' });
+      return;
+    }
 
     response.writeHead(201, {
       'Content-Type': 'application/json',
@@ -189,7 +239,7 @@ const server = createServer(async (request, response) => {
       body += chunk;
     }
 
-    let data: any;
+    let data: unknown;
 
     try {
       data = JSON.parse(body);
@@ -202,30 +252,10 @@ const server = createServer(async (request, response) => {
       return;
     }
 
-    if (typeof data !== 'object' || data === null || Array.isArray(data)) {
-      response.writeHead(400, {
-        'Content-Type': 'application/json',
-      });
+    const parsedData = articleUpdateSchema.safeParse(data);
 
-      response.end(JSON.stringify({ message: 'Invalid article data' }));
-      return;
-    }
-
-    const hasTitle = data.title !== undefined;
-    const hasContent = data.content !== undefined;
-
-    if (
-      (!hasTitle && !hasContent) ||
-      (hasTitle &&
-        (typeof data.title !== 'string' || data.title.trim() === '')) ||
-      (hasContent &&
-        (typeof data.content !== 'object' || data.content === null))
-    ) {
-      response.writeHead(400, {
-        'Content-Type': 'application/json',
-      });
-
-      response.end(JSON.stringify({ message: 'Invalid article data' }));
+    if (!parsedData.success) {
+      sendJson(response, 400, { message: 'Invalid article data' });
       return;
     }
 
@@ -248,8 +278,12 @@ const server = createServer(async (request, response) => {
     const article = await prisma.article.update({
       where: { slug: articleSlug },
       data: {
-        ...(hasTitle ? { title: data.title.trim() } : {}),
-        ...(hasContent ? { content: data.content } : {}),
+        ...(parsedData.data.title !== undefined
+          ? { title: parsedData.data.title }
+          : {}),
+        ...(parsedData.data.content !== undefined
+          ? { content: toJsonObject(parsedData.data.content) }
+          : {}),
       },
     });
 
@@ -302,12 +336,14 @@ const server = createServer(async (request, response) => {
 
       response.end(file.body);
       return;
-    } catch {
-      response.writeHead(404, {
-        'Content-Type': 'application/json',
-      });
+    } catch (error) {
+      if (isMissingObjectError(error)) {
+        sendJson(response, 404, { message: 'File not found' });
+        return;
+      }
 
-      response.end(JSON.stringify({ message: 'File not found' }));
+      console.error('Failed to get image from S3', error);
+      sendJson(response, 502, { message: 'Image storage is unavailable' });
       return;
     }
   }

@@ -2,7 +2,10 @@ import {
   S3Client,
   PutObjectCommand,
   GetObjectCommand,
+  S3ServiceException,
 } from '@aws-sdk/client-s3';
+
+export { S3ServiceException };
 
 const s3 = new S3Client({
   endpoint: process.env.S3_ENDPOINT!,
@@ -45,4 +48,13 @@ export async function getFile(key: string) {
     body: Buffer.from(await object.Body.transformToByteArray()),
     contentType: object.ContentType ?? 'application/octet-stream',
   };
+}
+
+export function isMissingObjectError(error: unknown) {
+  return (
+    error instanceof S3ServiceException &&
+    (error.$metadata.httpStatusCode === 404 ||
+      error.name === 'NoSuchKey' ||
+      error.name === 'NotFound')
+  );
 }
