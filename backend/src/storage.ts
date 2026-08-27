@@ -2,6 +2,7 @@ import {
   S3Client,
   PutObjectCommand,
   GetObjectCommand,
+  DeleteObjectCommand,
   S3ServiceException,
 } from '@aws-sdk/client-s3';
 
@@ -20,7 +21,7 @@ const s3 = new S3Client({
 export async function uploadFile(
   key: string,
   body: Buffer,
-  contentType: string,
+  contentType: string
 ) {
   await s3.send(
     new PutObjectCommand({
@@ -28,7 +29,7 @@ export async function uploadFile(
       Key: key,
       Body: body,
       ContentType: contentType,
-    }),
+    })
   );
 }
 
@@ -37,7 +38,7 @@ export async function getFile(key: string) {
     new GetObjectCommand({
       Bucket: process.env.S3_BUCKET,
       Key: key,
-    }),
+    })
   );
 
   if (!object.Body) {
@@ -48,6 +49,15 @@ export async function getFile(key: string) {
     body: Buffer.from(await object.Body.transformToByteArray()),
     contentType: object.ContentType ?? 'application/octet-stream',
   };
+}
+
+export async function deleteFile(key: string) {
+  await s3.send(
+    new DeleteObjectCommand({
+      Bucket: process.env.S3_BUCKET,
+      Key: key,
+    })
+  );
 }
 
 export function isMissingObjectError(error: unknown) {
