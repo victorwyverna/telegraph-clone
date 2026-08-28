@@ -7,6 +7,7 @@ import {
 } from 'node:http';
 import { fileURLToPath } from 'node:url';
 import { PrismaPg } from '@prisma/adapter-pg';
+import slugify from '@sindresorhus/slugify';
 import { z } from 'zod';
 import { Prisma, PrismaClient } from './generated/prisma/client.js';
 import { decodePathPart, readJsonBody, sendJson } from './http.js';
@@ -25,7 +26,7 @@ const imageExtensions = new Map([
   ['image/gif', 'gif'],
 ]);
 const articleSchema = z.object({
-  slug: z.string().trim().min(1),
+  slug: z.string().trim().min(1).optional(),
   title: z.string().trim().min(1),
   content: z.record(z.string(), z.unknown()),
 });
@@ -48,6 +49,19 @@ type AppDependencies = {
 
 function toJsonObject(data: Record<string, unknown>): Prisma.InputJsonObject {
   return data as Prisma.InputJsonObject;
+}
+
+function articleSlug(value: string) {
+  const slug = slugify(value).slice(0, 80).replace(/-+$/g, '');
+
+  return slug || 'article';
+}
+
+function isUniqueConstraintError(error: unknown) {
+  return (
+    error instanceof Prisma.PrismaClientKnownRequestError &&
+    error.code === 'P2002'
+  );
 }
 
 async function readImageBody(request: IncomingMessage) {
@@ -128,21 +142,31 @@ export function createApp(dependencies: AppDependencies = {}) {
       if ('error' in result)
         return sendArticleInputError(response, result.error);
 
-      try {
-        const article = await prismaClient.article.create({
-          data: { ...result.data, content: toJsonObject(result.data.content) },
-        });
+      const baseSlug = articleSlug(result.data.slug ?? result.data.title);
 
-        return sendJson(response, 201, article);
-      } catch (error) {
-        if (
-          error instanceof Prisma.PrismaClientKnownRequestError &&
-          error.code === 'P2002'
-        )
-          return sendJson(response, 409, { message: 'Slug already exists' });
+      for (let suffix = 1; suffix <= 100; suffix += 1) {
+        const slug = suffix === 1 ? baseSlug : `${baseSlug}-${suffix}`;
 
-        throw error;
+        try {
+          const article = await prismaClient.article.create({
+            data: {
+              slug,
+              title: result.data.title,
+              content: toJsonObject(result.data.content),
+            },
+          });
+
+          return sendJson(response, 201, article);
+        } catch (error) {
+          if (isUniqueConstraintError(error)) continue;
+
+          throw error;
+        }
       }
+
+      return sendJson(response, 503, {
+        message: 'Could not create a unique article URL',
+      });
     }
 
     if (request.url === '/articles' && request.method === 'GET')

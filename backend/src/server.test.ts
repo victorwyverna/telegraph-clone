@@ -60,10 +60,20 @@ test('creates articles and rejects malformed article input', async () => {
     const created = await fetch(`${baseUrl}/articles`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ slug: 'new', title: 'New', content: {} }),
+      body: JSON.stringify({ title: 'New article', content: {} }),
     });
 
     assert.equal(created.status, 201);
+    assert.equal((await created.json()).slug, 'new-article');
+
+    const cyrillicTitle = await fetch(`${baseUrl}/articles`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title: 'Моя первая ёлка', content: {} }),
+    });
+
+    assert.equal(cyrillicTitle.status, 201);
+    assert.equal((await cyrillicTitle.json()).slug, 'moya-pervaya-yolka');
 
     const malformed = await fetch(`${baseUrl}/articles`, {
       method: 'POST',

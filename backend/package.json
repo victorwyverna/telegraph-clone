@@ -26,6 +26,7 @@
     "@aws-sdk/client-s3": "^3.1118.0",
     "@prisma/adapter-pg": "^7.10.0",
     "@prisma/client": "^7.10.0",
+    "@sindresorhus/slugify": "^3.0.0",
     "dotenv": "^17.4.2",
     "pg": "^8.23.0",
     "prisma": "^7.10.0",
