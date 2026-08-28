@@ -1,0 +1,168 @@
+.home {
+  width: min(1120px, calc(100% - 48px));
+  margin: 0 auto;
+}
+
+.intro {
+  max-width: 780px;
+  padding: 104px 0 126px;
+}
+
+.eyebrow {
+  margin-bottom: 20px;
+  color: #788175;
+  font:
+    500 12px/1 'DM Mono',
+    monospace;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.intro h1 {
+  font:
+    600 clamp(46px, 7vw, 82px)/0.98 'Playfair Display',
+    Georgia,
+    serif;
+  letter-spacing: -0.055em;
+  margin-bottom: 28px;
+}
+
+.lead {
+  max-width: 480px;
+  color: #62665f;
+  font-size: 22px;
+  line-height: 1.38;
+  margin-bottom: 36px;
+}
+
+.primaryButton {
+  border: 0;
+  border-radius: 3px;
+  background: #20231f;
+  color: #fffdf8;
+  padding: 16px 22px;
+  font:
+    500 13px/1 'DM Mono',
+    monospace;
+  letter-spacing: 0.02em;
+}
+
+.articleList {
+  border-top: 1px solid #dcdad2;
+  padding: 25px 0 80px;
+}
+
+.sectionHeading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 28px;
+}
+
+.sectionHeading h2 {
+  font:
+    500 25px/1 'Playfair Display',
+    Georgia,
+    serif;
+  letter-spacing: -0.03em;
+  margin: 0;
+}
+
+.sectionHeading span,
+.quiet {
+  color: #7d827b;
+  font:
+    12px/1.4 'DM Mono',
+    monospace;
+}
+
+.articleGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-top: 1px solid #dcdad2;
+}
+
+.articleCard {
+  background: transparent;
+  border: 0;
+  border-right: 1px solid #dcdad2;
+  border-bottom: 1px solid #dcdad2;
+  text-align: left;
+  padding: 27px 25px 30px 0;
+  margin-right: 25px;
+  min-height: 205px;
+  display: flex;
+  flex-direction: column;
+}
+
+.articleCard:nth-child(3n) {
+  border-right: 0;
+  margin-right: 0;
+  padding-right: 0;
+}
+
+.articleCard p {
+  color: #7d827b;
+  font:
+    12px/1.4 'DM Mono',
+    monospace;
+}
+
+.articleCard h3 {
+  font:
+    500 26px/1.1 'Playfair Display',
+    Georgia,
+    serif;
+  letter-spacing: -0.035em;
+  margin: 19px 0 auto;
+}
+
+.articleCard span {
+  margin-top: 24px;
+  font:
+    12px/1 'DM Mono',
+    monospace;
+}
+
+.articleCard b {
+  font-size: 16px;
+  margin-left: 5px;
+}
+
+.articleCard:hover h3 {
+  color: #4f6650;
+}
+
+.errorMessage {
+  color: #a84d44;
+  font:
+    13px 'DM Mono',
+    monospace;
+  margin-top: 18px;
+}
+
+@media (max-width: 720px) {
+  .home {
+    width: min(100% - 32px, 1120px);
+  }
+
+  .intro {
+    padding: 70px 0 85px;
+  }
+
+  .lead {
+    font-size: 19px;
+  }
+
+  .articleGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .articleCard,
+  .articleCard:nth-child(3n) {
+    border-right: 0;
+    margin-right: 0;
+    padding-right: 0;
+    min-height: 155px;
+  }
+}

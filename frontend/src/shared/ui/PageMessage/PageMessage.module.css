@@ -1,0 +1,15 @@
+.pageMessage {
+  width: min(700px, calc(100% - 48px));
+  margin: 140px auto;
+}
+
+.pageMessage h1 {
+  font:
+    600 46px 'Playfair Display',
+    Georgia,
+    serif;
+}
+
+.pageMessage a {
+  color: #486a50;
+}

@@ -1,0 +1,72 @@
+.publicArticle {
+  width: min(700px, calc(100% - 48px));
+  margin: 92px auto 70px;
+}
+
+.articleDate {
+  margin-bottom: 20px;
+  color: #788175;
+  font:
+    500 12px/1 'DM Mono',
+    monospace;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.publicArticle h1 {
+  font:
+    600 clamp(42px, 6vw, 64px)/1.04 'Playfair Display',
+    Georgia,
+    serif;
+  letter-spacing: -0.048em;
+  margin-bottom: 42px;
+}
+
+.content {
+  font-size: 21px;
+  line-height: 1.56;
+}
+
+.content p {
+  margin: 0 0 1.25em;
+}
+
+.content h2 {
+  font:
+    600 32px/1.15 'Playfair Display',
+    Georgia,
+    serif;
+  margin: 1.5em 0 0.55em;
+}
+
+.content img {
+  max-width: 100%;
+  height: auto;
+  margin: 12px 0;
+}
+
+.content a {
+  color: #486a50;
+}
+
+.footer {
+  border-top: 1px solid #dcdad2;
+  margin-top: 55px;
+  padding-top: 20px;
+}
+
+.footer button {
+  color: #566a57;
+  background: none;
+  border: 0;
+  padding: 0;
+  font:
+    12px 'DM Mono',
+    monospace;
+}
+
+@media (max-width: 720px) {
+  .publicArticle {
+    margin-top: 58px;
+  }
+}

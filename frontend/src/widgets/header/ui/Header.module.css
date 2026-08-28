@@ -1,0 +1,38 @@
+.siteHeader {
+  width: min(1120px, calc(100% - 48px));
+  height: 86px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: auto;
+}
+.logo {
+  border: 0;
+  background: none;
+  padding: 0;
+  font:
+    600 30px/1 'Playfair Display',
+    Georgia,
+    serif;
+  letter-spacing: -1.4px;
+  color: #20231f;
+}
+.logo:hover {
+  color: #4f6650;
+}
+.newArticle {
+  border: 1px solid #dad8cf;
+  border-radius: 3px;
+  background: transparent;
+  color: #20231f;
+  padding: 12px 18px;
+  font:
+    500 12px/1 'DM Mono',
+    monospace;
+  letter-spacing: 0.02em;
+}
+@media (max-width: 720px) {
+  .siteHeader {
+    width: min(100% - 32px, 1120px);
+  }
+}
