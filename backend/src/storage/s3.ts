@@ -1,8 +1,8 @@
 import {
-  S3Client,
-  PutObjectCommand,
-  GetObjectCommand,
   DeleteObjectCommand,
+  GetObjectCommand,
+  PutObjectCommand,
+  S3Client,
   S3ServiceException,
 } from '@aws-sdk/client-s3';
 
@@ -35,15 +35,10 @@ export async function uploadFile(
 
 export async function getFile(key: string) {
   const object = await s3.send(
-    new GetObjectCommand({
-      Bucket: process.env.S3_BUCKET,
-      Key: key,
-    })
+    new GetObjectCommand({ Bucket: process.env.S3_BUCKET, Key: key })
   );
 
-  if (!object.Body) {
-    throw new Error('File body is missing');
-  }
+  if (!object.Body) throw new Error('File body is missing');
 
   return {
     body: Buffer.from(await object.Body.transformToByteArray()),
@@ -53,10 +48,7 @@ export async function getFile(key: string) {
 
 export async function deleteFile(key: string) {
   await s3.send(
-    new DeleteObjectCommand({
-      Bucket: process.env.S3_BUCKET,
-      Key: key,
-    })
+    new DeleteObjectCommand({ Bucket: process.env.S3_BUCKET, Key: key })
   );
 }
 
