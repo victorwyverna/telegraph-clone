@@ -1,0 +1,65 @@
+services:
+  postgres:
+    image: postgres:18
+    env_file: ${PRODUCTION_ENV_FILE:-.env.production}
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    env_file: ${PRODUCTION_ENV_FILE:-.env.production}
+    volumes:
+      - minio_data:/data
+    restart: unless-stopped
+
+  minio-init:
+    image: minio/mc:latest
+    env_file: ${PRODUCTION_ENV_FILE:-.env.production}
+    depends_on:
+      - minio
+    entrypoint: >-
+      /bin/sh -c 'until mc alias set storage "$$S3_ENDPOINT" "$$S3_ACCESS_KEY" "$$S3_SECRET_KEY";
+      do sleep 2; done; mc mb --ignore-existing "storage/$$S3_BUCKET"'
+
+  migrate:
+    build: ./backend
+    image: telegraph-backend:local
+    env_file: ${PRODUCTION_ENV_FILE:-.env.production}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: npm run db:migrate
+    restart: "no"
+
+  backend:
+    image: telegraph-backend:local
+    env_file: ${PRODUCTION_ENV_FILE:-.env.production}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      minio-init:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: /api
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  minio_data:

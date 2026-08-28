@@ -4,7 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "build": "tsc -p tsconfig.build.json",
     "dev": "tsx watch src/server.ts",
+    "start": "node dist/server.js",
+    "db:migrate": "prisma migrate deploy",
     "test": "tsx --test src/**/*.test.ts",
     "typecheck": "tsc --noEmit",
     "format": "prettier --write \"src/**/*.ts\" package.json",
