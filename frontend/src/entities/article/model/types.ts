@@ -9,5 +9,5 @@ export type Article = {
 
 export type ArticleInput = {
   title: string;
-  html: string;
+  content: Record<string, unknown>;
 };

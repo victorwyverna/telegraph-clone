@@ -49,6 +49,24 @@
   color: #486a50;
 }
 
+.content blockquote {
+  margin: 1.5em 0;
+  padding-left: 20px;
+  border-left: 3px solid #b8c1b6;
+  color: #62665f;
+}
+
+.content pre {
+  overflow-x: auto;
+  border-radius: 4px;
+  background: #20231f;
+  color: #fffdf8;
+  padding: 18px;
+  font:
+    14px/1.5 'DM Mono',
+    monospace;
+}
+
 .footer {
   border-top: 1px solid #dcdad2;
   margin-top: 55px;

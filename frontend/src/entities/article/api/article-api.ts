@@ -15,7 +15,7 @@ export const articleApi = {
       body: JSON.stringify({
         slug,
         title: input.title,
-        content: { html: input.html },
+        content: input.content,
       }),
     }),
 
@@ -25,7 +25,7 @@ export const articleApi = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         title: input.title,
-        content: { html: input.html },
+        content: input.content,
       }),
     }),
 

@@ -1,4 +1,9 @@
 import { useForm } from '@tanstack/react-form';
+import { EditorContent, useEditor } from '@tiptap/react';
+import Image from '@tiptap/extension-image';
+import Link from '@tiptap/extension-link';
+import Placeholder from '@tiptap/extension-placeholder';
+import StarterKit from '@tiptap/starter-kit';
 import type { ChangeEvent } from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
@@ -10,13 +15,13 @@ import {
   useUploadImage,
 } from '@/entities/article/model/queries';
 import type { Article } from '@/entities/article/model/types';
-import { sanitizeHtml, slugify } from '@/shared/lib/article-content';
+import { articleHtml, slugify } from '@/shared/lib/article-content';
 import { uploadUrl } from '@/shared/api/client';
 
 import styles from './ArticleEditor.module.css';
 
 type Props = { article?: Article; articleSlug?: string };
-type Values = { title: string; slug: string; html: string };
+type Values = { title: string; slug: string };
 
 export function ArticleEditor({ article, articleSlug }: Props) {
   const navigate = useNavigate();
@@ -25,13 +30,21 @@ export function ArticleEditor({ article, articleSlug }: Props) {
   const updateArticle = useUpdateArticle();
   const deleteArticle = useDeleteArticle();
   const uploadImage = useUploadImage();
-  const editorRef = useRef<HTMLDivElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState('');
   const isEditing = Boolean(articleSlug);
+  const editor = useEditor({
+    extensions: [
+      StarterKit,
+      Link.configure({ openOnClick: false }),
+      Image,
+      Placeholder.configure({ placeholder: 'Начните писать историю…' }),
+    ],
+    editorProps: { attributes: { class: styles.contentEditor } },
+  });
 
   const form = useForm({
-    defaultValues: { title: '', slug: '', html: '' } as Values,
+    defaultValues: { title: '', slug: '' } as Values,
     onSubmit: async ({ value }) => {
       if (!value.title.trim()) {
         setError('Добавьте заголовок истории');
@@ -42,9 +55,11 @@ export function ArticleEditor({ article, articleSlug }: Props) {
       setError('');
 
       try {
+        if (!editor) return;
+
         const input = {
           title: value.title.trim(),
-          html: sanitizeHtml(value.html),
+          content: editor.getJSON(),
         };
         const saved =
           isEditing && articleSlug
@@ -71,24 +86,12 @@ export function ArticleEditor({ article, articleSlug }: Props) {
     const values = {
       title: article.title,
       slug: article.slug,
-      html: (article.content.html as string) ?? '',
     };
 
     form.reset(values);
 
-    if (editorRef.current) editorRef.current.innerHTML = values.html;
-  }, [article, form]);
-
-  function updateHtml(html: string) {
-    form.setFieldValue('html', html);
-  }
-
-  function runCommand(command: string, value?: string) {
-    editorRef.current?.focus();
-    document.execCommand(command, false, value);
-
-    updateHtml(editorRef.current?.innerHTML ?? '');
-  }
+    editor?.commands.setContent(articleHtml(article.content));
+  }, [article, editor, form]);
 
   async function onImageChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -100,7 +103,11 @@ export function ArticleEditor({ article, articleSlug }: Props) {
     try {
       const { key } = await uploadImage.mutateAsync(file);
 
-      runCommand('insertImage', uploadUrl(key));
+      editor
+        ?.chain()
+        .focus()
+        .setImage({ src: uploadUrl(key) })
+        .run();
     } catch (reason) {
       setError(
         reason instanceof Error
@@ -147,7 +154,9 @@ export function ArticleEditor({ article, articleSlug }: Props) {
           <button
             type="button"
             className={styles.backLink}
-            onClick={() => navigate(isEditing ? `/${articleSlug}` : '/articles')}
+            onClick={() =>
+              navigate(isEditing ? `/${articleSlug}` : '/articles')
+            }
           >
             ← Назад
           </button>
@@ -204,21 +213,39 @@ export function ArticleEditor({ article, articleSlug }: Props) {
             </div>
           )}
           <div className={styles.toolbar} aria-label="Форматирование текста">
-            <button type="button" onClick={() => runCommand('bold')}>
+            <button
+              type="button"
+              className={editor?.isActive('bold') ? styles.active : undefined}
+              onClick={() => editor?.chain().focus().toggleBold().run()}
+            >
               <b>B</b>
             </button>
-            <button type="button" onClick={() => runCommand('italic')}>
+            <button
+              type="button"
+              className={editor?.isActive('italic') ? styles.active : undefined}
+              onClick={() => editor?.chain().focus().toggleItalic().run()}
+            >
               <i>I</i>
             </button>
             <button
               type="button"
-              onClick={() => runCommand('formatBlock', 'h2')}
+              className={
+                editor?.isActive('heading', { level: 2 })
+                  ? styles.active
+                  : undefined
+              }
+              onClick={() =>
+                editor?.chain().focus().toggleHeading({ level: 2 }).run()
+              }
             >
               H2
             </button>
             <button
               type="button"
-              onClick={() => runCommand('insertUnorderedList')}
+              className={
+                editor?.isActive('bulletList') ? styles.active : undefined
+              }
+              onClick={() => editor?.chain().focus().toggleBulletList().run()}
             >
               • Список
             </button>
@@ -226,10 +253,28 @@ export function ArticleEditor({ article, articleSlug }: Props) {
               type="button"
               onClick={() => {
                 const url = window.prompt('Вставьте ссылку');
-                if (url) runCommand('createLink', url);
+                if (url) editor?.chain().focus().setLink({ href: url }).run();
               }}
             >
               Ссылка
+            </button>
+            <button
+              type="button"
+              className={
+                editor?.isActive('blockquote') ? styles.active : undefined
+              }
+              onClick={() => editor?.chain().focus().toggleBlockquote().run()}
+            >
+              Цитата
+            </button>
+            <button
+              type="button"
+              className={
+                editor?.isActive('codeBlock') ? styles.active : undefined
+              }
+              onClick={() => editor?.chain().focus().toggleCodeBlock().run()}
+            >
+              Код
             </button>
             <button
               type="button"
@@ -246,14 +291,7 @@ export function ArticleEditor({ article, articleSlug }: Props) {
               hidden
             />
           </div>
-          <div
-            ref={editorRef}
-            className={styles.contentEditor}
-            contentEditable
-            suppressContentEditableWarning
-            data-placeholder="Начните писать историю…"
-            onInput={(event) => updateHtml(event.currentTarget.innerHTML)}
-          />
+          <EditorContent editor={editor} />
           {error && <p className={styles.errorMessage}>{error}</p>}
         </div>
       </form>

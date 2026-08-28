@@ -1,32 +1,16 @@
+import { generateHTML, type JSONContent } from '@tiptap/core';
+import Image from '@tiptap/extension-image';
+import Link from '@tiptap/extension-link';
+import StarterKit from '@tiptap/starter-kit';
+
+export const articleExtensions = [
+  StarterKit,
+  Link.configure({ openOnClick: false }),
+  Image,
+];
+
 export function articleHtml(content: Record<string, unknown>) {
-  if (typeof content.html === 'string') return content.html;
-
-  if (content.type === 'doc' && Array.isArray(content.content))
-    return content.content
-      .map((node) => {
-        if (!isRecord(node) || node.type !== 'paragraph') return '';
-        return `<p>${readText(node.content)}</p>`;
-      })
-      .join('');
-
-  return '';
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
-}
-
-function readText(nodes: unknown) {
-  if (!Array.isArray(nodes)) return '';
-
-  return nodes
-    .map((node) =>
-      isRecord(node) && typeof node.text === 'string' ? node.text : ''
-    )
-    .join('')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
+  return generateHTML(content as JSONContent, articleExtensions);
 }
 
 export function sanitizeHtml(html: string) {
