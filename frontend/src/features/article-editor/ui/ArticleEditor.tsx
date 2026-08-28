@@ -3,6 +3,7 @@ import { EditorContent, useEditor } from '@tiptap/react';
 import Image from '@tiptap/extension-image';
 import Link from '@tiptap/extension-link';
 import Placeholder from '@tiptap/extension-placeholder';
+import type { Node as ProseMirrorNode } from '@tiptap/pm/model';
 import StarterKit from '@tiptap/starter-kit';
 import type { ChangeEvent } from 'react';
 import { useEffect, useRef, useState } from 'react';
@@ -11,17 +12,32 @@ import { useNavigate } from 'react-router';
 import {
   useCreateArticle,
   useDeleteArticle,
+  useDeleteImage,
   useUpdateArticle,
   useUploadImage,
 } from '@/entities/article/model/queries';
 import type { Article } from '@/entities/article/model/types';
 import { articleHtml, slugify } from '@/shared/lib/article-content';
-import { uploadUrl } from '@/shared/api/client';
+import { uploadKeyFromUrl, uploadUrl } from '@/shared/api/client';
 
 import styles from './ArticleEditor.module.css';
 
 type Props = { article?: Article; articleSlug?: string };
 type Values = { title: string; slug: string };
+
+function imageKeys(content: ProseMirrorNode) {
+  const keys = new Set<string>();
+
+  content.descendants((node) => {
+    if (node.type.name !== 'image' || typeof node.attrs.src !== 'string')
+      return;
+
+    const key = uploadKeyFromUrl(node.attrs.src);
+    if (key) keys.add(key);
+  });
+
+  return keys;
+}
 
 export function ArticleEditor({ article, articleSlug }: Props) {
   const navigate = useNavigate();
@@ -30,7 +46,10 @@ export function ArticleEditor({ article, articleSlug }: Props) {
   const updateArticle = useUpdateArticle();
   const deleteArticle = useDeleteArticle();
   const uploadImage = useUploadImage();
+  const deleteImage = useDeleteImage();
   const imageInputRef = useRef<HTMLInputElement>(null);
+  const uploadedImageKeys = useRef(new Set<string>());
+  const isRestoringContent = useRef(false);
   const [error, setError] = useState('');
   const isEditing = Boolean(articleSlug);
   const editor = useEditor({
@@ -41,6 +60,28 @@ export function ArticleEditor({ article, articleSlug }: Props) {
       Placeholder.configure({ placeholder: 'Начните писать историю…' }),
     ],
     editorProps: { attributes: { class: styles.contentEditor } },
+    onUpdate: ({ editor: updatedEditor }) => {
+      const currentKeys = imageKeys(updatedEditor.state.doc);
+
+      if (isRestoringContent.current) {
+        uploadedImageKeys.current = currentKeys;
+        return;
+      }
+
+      for (const key of uploadedImageKeys.current) {
+        if (!currentKeys.has(key)) {
+          void deleteImage.mutateAsync(key).catch((reason: unknown) => {
+            setError(
+              reason instanceof Error
+                ? reason.message
+                : 'Не удалось удалить изображение'
+            );
+          });
+        }
+      }
+
+      uploadedImageKeys.current = currentKeys;
+    },
   });
 
   const form = useForm({
@@ -81,7 +122,7 @@ export function ArticleEditor({ article, articleSlug }: Props) {
   });
 
   useEffect(() => {
-    if (!article) return;
+    if (!article || !editor) return;
 
     const values = {
       title: article.title,
@@ -90,7 +131,10 @@ export function ArticleEditor({ article, articleSlug }: Props) {
 
     form.reset(values);
 
-    editor?.commands.setContent(articleHtml(article.content));
+    isRestoringContent.current = true;
+    editor.commands.setContent(articleHtml(article.content));
+    isRestoringContent.current = false;
+    uploadedImageKeys.current = imageKeys(editor.state.doc);
   }, [article, editor, form]);
 
   async function onImageChange(event: ChangeEvent<HTMLInputElement>) {

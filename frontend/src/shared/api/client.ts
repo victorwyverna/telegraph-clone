@@ -20,3 +20,18 @@ export async function apiRequest<T>(
 export function uploadUrl(key: string) {
   return `${apiUrl}/uploads/${encodeURIComponent(key)}`;
 }
+
+export function uploadKeyFromUrl(src: string) {
+  try {
+    const url = new URL(src, window.location.origin);
+    const api = new URL(apiUrl, window.location.origin);
+    const prefix = `${api.pathname.replace(/\/$/, '')}/uploads/`;
+
+    if (url.origin !== api.origin || !url.pathname.startsWith(prefix))
+      return null;
+
+    return decodeURIComponent(url.pathname.slice(prefix.length)) || null;
+  } catch {
+    return null;
+  }
+}

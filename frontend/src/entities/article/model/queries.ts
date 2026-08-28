@@ -59,3 +59,7 @@ export function useDeleteArticle() {
 export function useUploadImage() {
   return useMutation({ mutationFn: articleApi.uploadImage });
 }
+
+export function useDeleteImage() {
+  return useMutation({ mutationFn: articleApi.removeImage });
+}

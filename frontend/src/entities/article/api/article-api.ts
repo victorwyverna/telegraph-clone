@@ -40,4 +40,9 @@ export const articleApi = {
       headers: { 'Content-Type': file.type },
       body: file,
     }),
+
+  removeImage: (key: string) =>
+    apiRequest<void>(`/uploads/${encodeURIComponent(key)}`, {
+      method: 'DELETE',
+    }),
 };
