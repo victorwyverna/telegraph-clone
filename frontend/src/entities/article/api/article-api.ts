@@ -8,12 +8,11 @@ export const articleApi = {
   getBySlug: (slug: string) =>
     apiRequest<Article>(`/articles/${encodeURIComponent(slug)}`),
 
-  create: (slug: string, input: ArticleInput) =>
+  create: (input: ArticleInput) =>
     apiRequest<Article>('/articles', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        slug,
         title: input.title,
         content: input.content,
       }),

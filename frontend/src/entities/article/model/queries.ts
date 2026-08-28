@@ -24,8 +24,7 @@ export function useArticle(slug: string) {
 export function useCreateArticle() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ slug, input }: { slug: string; input: ArticleInput }) =>
-      articleApi.create(slug, input),
+    mutationFn: (input: ArticleInput) => articleApi.create(input),
     onSuccess: (article) => {
       queryClient.setQueryData(articleKeys.detail(article.slug), article);
       void queryClient.invalidateQueries({ queryKey: articleKeys.all });

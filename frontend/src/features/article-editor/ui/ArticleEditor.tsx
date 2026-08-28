@@ -17,13 +17,13 @@ import {
   useUploadImage,
 } from '@/entities/article/model/queries';
 import type { Article } from '@/entities/article/model/types';
-import { articleHtml, slugify } from '@/shared/lib/article-content';
+import { articleHtml } from '@/shared/lib/article-content';
 import { uploadKeyFromUrl, uploadUrl } from '@/shared/api/client';
 
 import styles from './ArticleEditor.module.css';
 
 type Props = { article?: Article; articleSlug?: string };
-type Values = { title: string; slug: string };
+type Values = { title: string };
 
 function imageKeys(content: ProseMirrorNode) {
   const keys = new Set<string>();
@@ -85,7 +85,7 @@ export function ArticleEditor({ article, articleSlug }: Props) {
   });
 
   const form = useForm({
-    defaultValues: { title: '', slug: '' } as Values,
+    defaultValues: { title: '' } as Values,
     onSubmit: async ({ value }) => {
       if (!value.title.trim()) {
         setError('Добавьте заголовок истории');
@@ -105,10 +105,7 @@ export function ArticleEditor({ article, articleSlug }: Props) {
         const saved =
           isEditing && articleSlug
             ? await updateArticle.mutateAsync({ slug: articleSlug, input })
-            : await createArticle.mutateAsync({
-                slug: slugify(value.slug || value.title),
-                input,
-              });
+            : await createArticle.mutateAsync(input);
 
         navigate(`/${encodeURIComponent(saved.slug)}`);
       } catch (reason) {
@@ -126,7 +123,6 @@ export function ArticleEditor({ article, articleSlug }: Props) {
 
     const values = {
       title: article.title,
-      slug: article.slug,
     };
 
     form.reset(values);
@@ -241,21 +237,6 @@ export function ArticleEditor({ article, articleSlug }: Props) {
               />
             )}
           </form.Field>
-          {!isEditing && (
-            <div className={styles.slugField}>
-              <span>telegraph.local/</span>
-              <form.Field name="slug">
-                {(field) => (
-                  <input
-                    value={field.state.value}
-                    onChange={(event) => field.handleChange(event.target.value)}
-                    placeholder="адрес-истории"
-                    aria-label="Адрес истории"
-                  />
-                )}
-              </form.Field>
-            </div>
-          )}
           <div className={styles.toolbar} aria-label="Форматирование текста">
             <button
               type="button"

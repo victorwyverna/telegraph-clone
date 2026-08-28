@@ -34,6 +34,8 @@ export function ArticlePage() {
       </>
     );
 
+  const publicUrl = `${window.location.origin}/${encodeURIComponent(article.slug)}`;
+
   return (
     <>
       <Header />
@@ -48,6 +50,12 @@ export function ArticlePage() {
           }}
         />
         <footer className={styles.footer}>
+          <button
+            type="button"
+            onClick={() => void navigator.clipboard?.writeText(publicUrl)}
+          >
+            Скопировать ссылку
+          </button>
           <button
             type="button"
             onClick={() =>
