@@ -3,9 +3,10 @@ import { useNavigate } from 'react-router';
 import { useArticles } from '@/entities/article/model/queries';
 import { formatDate } from '@/shared/lib/format-date';
 import { Header } from '@/widgets/header';
-import styles from './HomePage.module.css';
 
-export function HomePage() {
+import styles from './ArticlesPage.module.css';
+
+export function ArticlesPage() {
   const navigate = useNavigate();
 
   const { data: articles = [], isPending, error } = useArticles();
@@ -32,7 +33,7 @@ export function HomePage() {
           <button
             className={styles.primaryButton}
             type="button"
-            onClick={() => navigate('/new')}
+            onClick={() => navigate('/')}
           >
             Начать писать
           </button>

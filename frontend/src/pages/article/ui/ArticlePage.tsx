@@ -51,7 +51,7 @@ export function ArticlePage() {
           <button
             type="button"
             onClick={() =>
-              navigate(`/edit/${encodeURIComponent(article.slug)}`)
+              navigate(`/${encodeURIComponent(article.slug)}/edit`)
             }
           >
             Редактировать

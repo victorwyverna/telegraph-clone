@@ -6,15 +6,15 @@ import { AppProviders } from '@/app/providers/AppProviders';
 
 import { ArticlePage } from '@/pages/article';
 import { EditorPage } from '@/pages/editor';
-import { HomePage } from '@/pages/home';
+import { ArticlesPage } from '@/pages/articles';
 import { NotFoundPage } from '@/pages/not-found';
 
 import '@/app/styles/global.css';
 
 export const router = createBrowserRouter([
-  { path: '/', element: <HomePage /> },
-  { path: '/new', element: <EditorPage /> },
-  { path: '/edit/:slug', element: <EditorPage /> },
+  { path: '/', element: <EditorPage /> },
+  { path: '/articles', element: <ArticlesPage /> },
+  { path: '/:slug/edit', element: <EditorPage /> },
   { path: '/:slug', element: <ArticlePage /> },
   { path: '*', element: <NotFoundPage /> },
 ]);

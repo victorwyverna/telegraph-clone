@@ -2,6 +2,7 @@ import { useForm } from '@tanstack/react-form';
 import type { ChangeEvent } from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
+
 import {
   useCreateArticle,
   useDeleteArticle,
@@ -11,6 +12,7 @@ import {
 import type { Article } from '@/entities/article/model/types';
 import { sanitizeHtml, slugify } from '@/shared/lib/article-content';
 import { uploadUrl } from '@/shared/api/client';
+
 import styles from './ArticleEditor.module.css';
 
 type Props = { article?: Article; articleSlug?: string };
@@ -18,6 +20,7 @@ type Values = { title: string; slug: string; html: string };
 
 export function ArticleEditor({ article, articleSlug }: Props) {
   const navigate = useNavigate();
+
   const createArticle = useCreateArticle();
   const updateArticle = useUpdateArticle();
   const deleteArticle = useDeleteArticle();
@@ -26,14 +29,18 @@ export function ArticleEditor({ article, articleSlug }: Props) {
   const imageInputRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState('');
   const isEditing = Boolean(articleSlug);
+
   const form = useForm({
     defaultValues: { title: '', slug: '', html: '' } as Values,
     onSubmit: async ({ value }) => {
       if (!value.title.trim()) {
         setError('Добавьте заголовок истории');
+
         return;
       }
+
       setError('');
+
       try {
         const input = {
           title: value.title.trim(),
@@ -46,6 +53,7 @@ export function ArticleEditor({ article, articleSlug }: Props) {
                 slug: slugify(value.slug || value.title),
                 input,
               });
+
         navigate(`/${encodeURIComponent(saved.slug)}`);
       } catch (reason) {
         setError(
@@ -56,30 +64,42 @@ export function ArticleEditor({ article, articleSlug }: Props) {
       }
     },
   });
+
   useEffect(() => {
     if (!article) return;
+
     const values = {
       title: article.title,
       slug: article.slug,
       html: (article.content.html as string) ?? '',
     };
+
     form.reset(values);
+
     if (editorRef.current) editorRef.current.innerHTML = values.html;
   }, [article, form]);
+
   function updateHtml(html: string) {
     form.setFieldValue('html', html);
   }
+
   function runCommand(command: string, value?: string) {
     editorRef.current?.focus();
     document.execCommand(command, false, value);
+
     updateHtml(editorRef.current?.innerHTML ?? '');
   }
+
   async function onImageChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
+
     if (!file) return;
+
     setError('');
+
     try {
       const { key } = await uploadImage.mutateAsync(file);
+
       runCommand('insertImage', uploadUrl(key));
     } catch (reason) {
       setError(
@@ -91,14 +111,17 @@ export function ArticleEditor({ article, articleSlug }: Props) {
       event.target.value = '';
     }
   }
+
   async function remove() {
     if (
       !articleSlug ||
       !window.confirm('Удалить историю без возможности восстановления?')
     )
       return;
+
     try {
       await deleteArticle.mutateAsync(articleSlug);
+
       navigate('/');
     } catch (reason) {
       setError(
@@ -106,10 +129,12 @@ export function ArticleEditor({ article, articleSlug }: Props) {
       );
     }
   }
+
   const isSaving =
     createArticle.isPending ||
     updateArticle.isPending ||
     deleteArticle.isPending;
+
   return (
     <main className={styles.editorPage}>
       <form
@@ -122,7 +147,7 @@ export function ArticleEditor({ article, articleSlug }: Props) {
           <button
             type="button"
             className={styles.backLink}
-            onClick={() => navigate(isEditing ? `/${articleSlug}` : '/')}
+            onClick={() => navigate(isEditing ? `/${articleSlug}` : '/articles')}
           >
             ← Назад
           </button>

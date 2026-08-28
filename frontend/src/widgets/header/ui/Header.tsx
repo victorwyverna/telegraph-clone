@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router';
+
 import styles from './Header.module.css';
 
 export function Header() {
@@ -9,14 +10,14 @@ export function Header() {
       <button
         className={styles.logo}
         type="button"
-        onClick={() => navigate('/')}
+        onClick={() => navigate('/articles')}
       >
         Telegraph
       </button>
       <button
         className={styles.newArticle}
         type="button"
-        onClick={() => navigate('/new')}
+        onClick={() => navigate('/')}
       >
         Новая история
       </button>
