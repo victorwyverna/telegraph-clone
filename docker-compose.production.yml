@@ -1,3 +1,5 @@
+name: telegraph-clone
+
 services:
   postgres:
     image: postgres:18
@@ -56,10 +58,25 @@ services:
         VITE_API_URL: /api
     depends_on:
       - backend
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2-alpine
+    env_file: ${PRODUCTION_ENV_FILE:-.env.production}
+    depends_on:
+      - frontend
     ports:
       - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
     restart: unless-stopped
 
 volumes:
   postgres_data:
   minio_data:
+  caddy_data:
+  caddy_config:
