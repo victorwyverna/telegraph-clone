@@ -22,7 +22,7 @@ import { uploadKeyFromUrl, uploadUrl } from '@/shared/api/client';
 
 import styles from './ArticleEditor.module.css';
 
-type Props = { article?: Article; articleSlug?: string };
+type Props = { article?: Article; articleSlug?: string; editToken?: string };
 type Values = { title: string };
 
 function imageKeys(content: ProseMirrorNode) {
@@ -39,7 +39,7 @@ function imageKeys(content: ProseMirrorNode) {
   return keys;
 }
 
-export function ArticleEditor({ article, articleSlug }: Props) {
+export function ArticleEditor({ article, articleSlug, editToken }: Props) {
   const navigate = useNavigate();
 
   const createArticle = useCreateArticle();
@@ -102,12 +102,27 @@ export function ArticleEditor({ article, articleSlug }: Props) {
           title: value.title.trim(),
           content: editor.getJSON(),
         };
+
+        if (isEditing && articleSlug && !editToken) {
+          setError('Для редактирования нужна секретная ссылка автора');
+
+          return;
+        }
+
         const saved =
           isEditing && articleSlug
-            ? await updateArticle.mutateAsync({ slug: articleSlug, input })
+            ? await updateArticle.mutateAsync({
+                slug: articleSlug,
+                input,
+                editToken: editToken!,
+              })
             : await createArticle.mutateAsync(input);
 
-        navigate(`/${encodeURIComponent(saved.slug)}`);
+        navigate(
+          'article' in saved
+            ? `/${encodeURIComponent(saved.article.slug)}/edit?token=${encodeURIComponent(saved.editToken)}`
+            : `/${encodeURIComponent(saved.slug)}`
+        );
       } catch (reason) {
         setError(
           reason instanceof Error
@@ -167,7 +182,13 @@ export function ArticleEditor({ article, articleSlug }: Props) {
       return;
 
     try {
-      await deleteArticle.mutateAsync(articleSlug);
+      if (!editToken) {
+        setError('Для удаления нужна секретная ссылка автора');
+
+        return;
+      }
+
+      await deleteArticle.mutateAsync({ slug: articleSlug, editToken });
 
       navigate('/');
     } catch (reason) {

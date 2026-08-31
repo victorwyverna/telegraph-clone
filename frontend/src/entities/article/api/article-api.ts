@@ -1,6 +1,10 @@
 import { apiRequest } from '@/shared/api/client';
 
-import type { Article, ArticleInput } from '@/entities/article/model/types';
+import type {
+  Article,
+  ArticleInput,
+  CreatedArticle,
+} from '@/entities/article/model/types';
 
 export const articleApi = {
   getAll: () => apiRequest<Article[]>('/articles'),
@@ -9,7 +13,7 @@ export const articleApi = {
     apiRequest<Article>(`/articles/${encodeURIComponent(slug)}`),
 
   create: (input: ArticleInput) =>
-    apiRequest<Article>('/articles', {
+    apiRequest<CreatedArticle>('/articles', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -18,19 +22,23 @@ export const articleApi = {
       }),
     }),
 
-  update: (slug: string, input: ArticleInput) =>
+  update: (slug: string, input: ArticleInput, editToken: string) =>
     apiRequest<Article>(`/articles/${encodeURIComponent(slug)}`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Edit-Token': editToken,
+      },
       body: JSON.stringify({
         title: input.title,
         content: input.content,
       }),
     }),
 
-  remove: (slug: string) =>
+  remove: (slug: string, editToken: string) =>
     apiRequest<void>(`/articles/${encodeURIComponent(slug)}`, {
       method: 'DELETE',
+      headers: { 'X-Edit-Token': editToken },
     }),
 
   uploadImage: (file: File) =>

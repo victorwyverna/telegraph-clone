@@ -32,7 +32,10 @@ export function createApp(dependencies: AppDependencies = {}) {
       'Access-Control-Allow-Methods',
       'GET, POST, PATCH, DELETE, OPTIONS'
     );
-    response.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    response.setHeader(
+      'Access-Control-Allow-Headers',
+      'Content-Type, X-Edit-Token'
+    );
 
     if (request.method === 'OPTIONS') {
       response.writeHead(204);

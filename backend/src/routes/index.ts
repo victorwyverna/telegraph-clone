@@ -57,7 +57,7 @@ export async function routeRequest(
       return updateArticle(request, response, service, slug);
 
     if (request.method === 'DELETE')
-      return deleteArticle(response, service, slug);
+      return deleteArticle(request, response, service, slug);
   }
 
   const uploadMatch = request.url?.match(/^\/uploads\/([^/?]+)$/);

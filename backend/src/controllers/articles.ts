@@ -16,6 +16,12 @@ const articleUpdateSchema = z
   })
   .refine((data) => data.title !== undefined || data.content !== undefined);
 
+function editToken(request: IncomingMessage) {
+  const value = request.headers['x-edit-token'];
+
+  return typeof value === 'string' && value.length > 0 ? value : null;
+}
+
 function sendInputError(
   response: ServerResponse,
   error: 'invalid-json' | 'invalid-data' | 'too-large'
@@ -40,10 +46,10 @@ export async function createArticle(
 
   if ('error' in result) return sendInputError(response, result.error);
 
-  const article = await service.create(result.data);
+  const created = await service.create(result.data);
 
-  return article
-    ? sendJson(response, 201, article)
+  return created
+    ? sendJson(response, 201, created)
     : sendJson(response, 503, {
         message: 'Could not create a unique article URL',
       });
@@ -78,20 +84,38 @@ export async function updateArticle(
 
   if ('error' in result) return sendInputError(response, result.error);
 
-  const article = await service.update(slug, result.data);
+  const token = editToken(request);
 
-  return article
-    ? sendJson(response, 200, article)
-    : sendJson(response, 404, { message: 'Article not found' });
+  if (!token) return sendJson(response, 403, { message: 'Invalid edit token' });
+
+  const article = await service.update(slug, {
+    ...result.data,
+    editToken: token,
+  });
+
+  return article === 'forbidden'
+    ? sendJson(response, 403, { message: 'Invalid edit token' })
+    : article
+      ? sendJson(response, 200, article)
+      : sendJson(response, 404, { message: 'Article not found' });
 }
 
 export async function deleteArticle(
+  request: IncomingMessage,
   response: ServerResponse,
   service: ArticleService,
   slug: string
 ) {
-  if (!(await service.delete(slug)))
-    return sendJson(response, 404, { message: 'Article not found' });
+  const token = editToken(request);
+
+  if (!token) return sendJson(response, 403, { message: 'Invalid edit token' });
+
+  const result = await service.delete(slug, token);
+
+  if (result === 'forbidden')
+    return sendJson(response, 403, { message: 'Invalid edit token' });
+
+  if (!result) return sendJson(response, 404, { message: 'Article not found' });
 
   response.writeHead(204);
   response.end();

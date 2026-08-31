@@ -1,4 +1,4 @@
-import { useParams } from 'react-router';
+import { useSearchParams, useParams } from 'react-router';
 
 import { useArticle } from '@/entities/article/model/queries';
 import { ArticleEditor } from '@/features/article-editor';
@@ -6,6 +6,7 @@ import { PageMessage } from '@/shared/ui/PageMessage';
 
 export function EditorPage() {
   const { slug } = useParams();
+  const [searchParams] = useSearchParams();
 
   const { data: article, isPending, error } = useArticle(slug ?? '');
 
@@ -26,5 +27,11 @@ export function EditorPage() {
       </PageMessage>
     );
 
-  return <ArticleEditor article={article} articleSlug={slug} />;
+  return (
+    <ArticleEditor
+      article={article}
+      articleSlug={slug}
+      editToken={searchParams.get('token') ?? undefined}
+    />
+  );
 }

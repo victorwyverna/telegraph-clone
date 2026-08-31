@@ -1,8 +1,17 @@
 import slugify from '@sindresorhus/slugify';
+import { randomUUID } from 'node:crypto';
 
 import { Prisma, type PrismaClient } from '../generated/prisma/client.js';
 
 export type ArticleRepository = Pick<PrismaClient, 'article'>;
+
+type Article = Awaited<ReturnType<PrismaClient['article']['findUnique']>>;
+
+function publicArticle(article: NonNullable<Article>) {
+  const { editToken: _, ...result } = article;
+
+  return result;
+}
 
 function toJsonObject(data: Record<string, unknown>): Prisma.InputJsonObject {
   return data as Prisma.InputJsonObject;
@@ -25,11 +34,15 @@ export class ArticleService {
   constructor(private readonly prisma: ArticleRepository) {}
 
   list() {
-    return this.prisma.article.findMany();
+    return this.prisma.article
+      .findMany()
+      .then((articles) => articles.map(publicArticle));
   }
 
-  findBySlug(slug: string) {
-    return this.prisma.article.findUnique({ where: { slug } });
+  async findBySlug(slug: string) {
+    const article = await this.prisma.article.findUnique({ where: { slug } });
+
+    return article ? publicArticle(article) : null;
   }
 
   async create(input: {
@@ -43,13 +56,19 @@ export class ArticleService {
       const slug = suffix === 1 ? baseSlug : `${baseSlug}-${suffix}`;
 
       try {
-        return await this.prisma.article.create({
+        const article = await this.prisma.article.create({
           data: {
             slug,
+            editToken: randomUUID(),
             title: input.title,
             content: toJsonObject(input.content),
           },
         });
+
+        return {
+          article: publicArticle(article),
+          editToken: article.editToken!,
+        };
       } catch (error) {
         if (isUniqueConstraintError(error)) continue;
 
@@ -65,12 +84,11 @@ export class ArticleService {
     input: {
       title?: string | undefined;
       content?: Record<string, unknown> | undefined;
+      editToken: string;
     }
   ) {
-    if (!(await this.findBySlug(slug))) return null;
-
-    return this.prisma.article.update({
-      where: { slug },
+    const result = await this.prisma.article.updateMany({
+      where: { slug, editToken: input.editToken },
       data: {
         ...(input.title === undefined ? {} : { title: input.title }),
         ...(input.content === undefined
@@ -78,13 +96,19 @@ export class ArticleService {
           : { content: toJsonObject(input.content) }),
       },
     });
+
+    if (result.count) return this.findBySlug(slug);
+
+    return (await this.findBySlug(slug)) ? 'forbidden' : null;
   }
 
-  async delete(slug: string) {
-    if (!(await this.findBySlug(slug))) return false;
+  async delete(slug: string, editToken: string) {
+    const result = await this.prisma.article.deleteMany({
+      where: { slug, editToken },
+    });
 
-    await this.prisma.article.delete({ where: { slug } });
+    if (result.count) return true;
 
-    return true;
+    return (await this.findBySlug(slug)) ? 'forbidden' : false;
   }
 }

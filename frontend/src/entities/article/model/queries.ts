@@ -23,10 +23,12 @@ export function useArticle(slug: string) {
 
 export function useCreateArticle() {
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: (input: ArticleInput) => articleApi.create(input),
-    onSuccess: (article) => {
+    onSuccess: ({ article }) => {
       queryClient.setQueryData(articleKeys.detail(article.slug), article);
+
       void queryClient.invalidateQueries({ queryKey: articleKeys.all });
     },
   });
@@ -34,11 +36,20 @@ export function useCreateArticle() {
 
 export function useUpdateArticle() {
   const queryClient = useQueryClient();
+
   return useMutation({
-    mutationFn: ({ slug, input }: { slug: string; input: ArticleInput }) =>
-      articleApi.update(slug, input),
+    mutationFn: ({
+      slug,
+      input,
+      editToken,
+    }: {
+      slug: string;
+      input: ArticleInput;
+      editToken: string;
+    }) => articleApi.update(slug, input, editToken),
     onSuccess: (article) => {
       queryClient.setQueryData(articleKeys.detail(article.slug), article);
+
       void queryClient.invalidateQueries({ queryKey: articleKeys.all });
     },
   });
@@ -46,10 +57,13 @@ export function useUpdateArticle() {
 
 export function useDeleteArticle() {
   const queryClient = useQueryClient();
+
   return useMutation({
-    mutationFn: articleApi.remove,
-    onSuccess: (_, slug) => {
+    mutationFn: ({ slug, editToken }: { slug: string; editToken: string }) =>
+      articleApi.remove(slug, editToken),
+    onSuccess: (_, { slug }) => {
       queryClient.removeQueries({ queryKey: articleKeys.detail(slug) });
+
       void queryClient.invalidateQueries({ queryKey: articleKeys.all });
     },
   });

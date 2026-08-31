@@ -37,6 +37,7 @@ export type ArticleSumAggregateOutputType = {
 export type ArticleMinAggregateOutputType = {
   id: number | null
   slug: string | null
+  editToken: string | null
   title: string | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -45,6 +46,7 @@ export type ArticleMinAggregateOutputType = {
 export type ArticleMaxAggregateOutputType = {
   id: number | null
   slug: string | null
+  editToken: string | null
   title: string | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -53,6 +55,7 @@ export type ArticleMaxAggregateOutputType = {
 export type ArticleCountAggregateOutputType = {
   id: number
   slug: number
+  editToken: number
   title: number
   content: number
   createdAt: number
@@ -72,6 +75,7 @@ export type ArticleSumAggregateInputType = {
 export type ArticleMinAggregateInputType = {
   id?: true
   slug?: true
+  editToken?: true
   title?: true
   createdAt?: true
   updatedAt?: true
@@ -80,6 +84,7 @@ export type ArticleMinAggregateInputType = {
 export type ArticleMaxAggregateInputType = {
   id?: true
   slug?: true
+  editToken?: true
   title?: true
   createdAt?: true
   updatedAt?: true
@@ -88,6 +93,7 @@ export type ArticleMaxAggregateInputType = {
 export type ArticleCountAggregateInputType = {
   id?: true
   slug?: true
+  editToken?: true
   title?: true
   content?: true
   createdAt?: true
@@ -184,6 +190,7 @@ export type ArticleGroupByArgs<ExtArgs extends runtime.Types.Extensions.Internal
 export type ArticleGroupByOutputType = {
   id: number
   slug: string
+  editToken: string | null
   title: string
   content: runtime.JsonValue
   createdAt: Date
@@ -216,6 +223,7 @@ export type ArticleWhereInput = {
   NOT?: Prisma.ArticleWhereInput | Prisma.ArticleWhereInput[]
   id?: Prisma.IntFilter<"Article"> | number
   slug?: Prisma.StringFilter<"Article"> | string
+  editToken?: Prisma.StringNullableFilter<"Article"> | string | null
   title?: Prisma.StringFilter<"Article"> | string
   content?: Prisma.JsonFilter<"Article">
   createdAt?: Prisma.DateTimeFilter<"Article"> | Date | string
@@ -225,6 +233,7 @@ export type ArticleWhereInput = {
 export type ArticleOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   slug?: Prisma.SortOrder
+  editToken?: Prisma.SortOrderInput | Prisma.SortOrder
   title?: Prisma.SortOrder
   content?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -234,6 +243,7 @@ export type ArticleOrderByWithRelationInput = {
 export type ArticleWhereUniqueInput = Prisma.AtLeast<{
   id?: number
   slug?: string
+  editToken?: string
   AND?: Prisma.ArticleWhereInput | Prisma.ArticleWhereInput[]
   OR?: Prisma.ArticleWhereInput[]
   NOT?: Prisma.ArticleWhereInput | Prisma.ArticleWhereInput[]
@@ -241,11 +251,12 @@ export type ArticleWhereUniqueInput = Prisma.AtLeast<{
   content?: Prisma.JsonFilter<"Article">
   createdAt?: Prisma.DateTimeFilter<"Article"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Article"> | Date | string
-}, "id" | "slug">
+}, "id" | "slug" | "editToken">
 
 export type ArticleOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   slug?: Prisma.SortOrder
+  editToken?: Prisma.SortOrderInput | Prisma.SortOrder
   title?: Prisma.SortOrder
   content?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -263,6 +274,7 @@ export type ArticleScalarWhereWithAggregatesInput = {
   NOT?: Prisma.ArticleScalarWhereWithAggregatesInput | Prisma.ArticleScalarWhereWithAggregatesInput[]
   id?: Prisma.IntWithAggregatesFilter<"Article"> | number
   slug?: Prisma.StringWithAggregatesFilter<"Article"> | string
+  editToken?: Prisma.StringNullableWithAggregatesFilter<"Article"> | string | null
   title?: Prisma.StringWithAggregatesFilter<"Article"> | string
   content?: Prisma.JsonWithAggregatesFilter<"Article">
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Article"> | Date | string
@@ -271,6 +283,7 @@ export type ArticleScalarWhereWithAggregatesInput = {
 
 export type ArticleCreateInput = {
   slug: string
+  editToken?: string | null
   title: string
   content: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
@@ -280,6 +293,7 @@ export type ArticleCreateInput = {
 export type ArticleUncheckedCreateInput = {
   id?: number
   slug: string
+  editToken?: string | null
   title: string
   content: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
@@ -288,6 +302,7 @@ export type ArticleUncheckedCreateInput = {
 
 export type ArticleUpdateInput = {
   slug?: Prisma.StringFieldUpdateOperationsInput | string
+  editToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   title?: Prisma.StringFieldUpdateOperationsInput | string
   content?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -297,6 +312,7 @@ export type ArticleUpdateInput = {
 export type ArticleUncheckedUpdateInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   slug?: Prisma.StringFieldUpdateOperationsInput | string
+  editToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   title?: Prisma.StringFieldUpdateOperationsInput | string
   content?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -306,6 +322,7 @@ export type ArticleUncheckedUpdateInput = {
 export type ArticleCreateManyInput = {
   id?: number
   slug: string
+  editToken?: string | null
   title: string
   content: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
@@ -314,6 +331,7 @@ export type ArticleCreateManyInput = {
 
 export type ArticleUpdateManyMutationInput = {
   slug?: Prisma.StringFieldUpdateOperationsInput | string
+  editToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   title?: Prisma.StringFieldUpdateOperationsInput | string
   content?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -323,6 +341,7 @@ export type ArticleUpdateManyMutationInput = {
 export type ArticleUncheckedUpdateManyInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   slug?: Prisma.StringFieldUpdateOperationsInput | string
+  editToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   title?: Prisma.StringFieldUpdateOperationsInput | string
   content?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -332,6 +351,7 @@ export type ArticleUncheckedUpdateManyInput = {
 export type ArticleCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   slug?: Prisma.SortOrder
+  editToken?: Prisma.SortOrder
   title?: Prisma.SortOrder
   content?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -345,6 +365,7 @@ export type ArticleAvgOrderByAggregateInput = {
 export type ArticleMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   slug?: Prisma.SortOrder
+  editToken?: Prisma.SortOrder
   title?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -353,6 +374,7 @@ export type ArticleMaxOrderByAggregateInput = {
 export type ArticleMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   slug?: Prisma.SortOrder
+  editToken?: Prisma.SortOrder
   title?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -364,6 +386,10 @@ export type ArticleSumOrderByAggregateInput = {
 
 export type StringFieldUpdateOperationsInput = {
   set?: string
+}
+
+export type NullableStringFieldUpdateOperationsInput = {
+  set?: string | null
 }
 
 export type DateTimeFieldUpdateOperationsInput = {
@@ -383,6 +409,7 @@ export type IntFieldUpdateOperationsInput = {
 export type ArticleSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   slug?: boolean
+  editToken?: boolean
   title?: boolean
   content?: boolean
   createdAt?: boolean
@@ -392,6 +419,7 @@ export type ArticleSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
 export type ArticleSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   slug?: boolean
+  editToken?: boolean
   title?: boolean
   content?: boolean
   createdAt?: boolean
@@ -401,6 +429,7 @@ export type ArticleSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exten
 export type ArticleSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   slug?: boolean
+  editToken?: boolean
   title?: boolean
   content?: boolean
   createdAt?: boolean
@@ -410,13 +439,14 @@ export type ArticleSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exten
 export type ArticleSelectScalar = {
   id?: boolean
   slug?: boolean
+  editToken?: boolean
   title?: boolean
   content?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type ArticleOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "slug" | "title" | "content" | "createdAt" | "updatedAt", ExtArgs["result"]["article"]>
+export type ArticleOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "slug" | "editToken" | "title" | "content" | "createdAt" | "updatedAt", ExtArgs["result"]["article"]>
 
 export type $ArticlePayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "Article"
@@ -424,6 +454,7 @@ export type $ArticlePayload<ExtArgs extends runtime.Types.Extensions.InternalArg
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: number
     slug: string
+    editToken: string | null
     title: string
     content: runtime.JsonValue
     createdAt: Date
@@ -853,6 +884,7 @@ export interface Prisma__ArticleClient<T, Null = never, ExtArgs extends runtime.
 export interface ArticleFieldRefs {
   readonly id: Prisma.FieldRef<"Article", 'Int'>
   readonly slug: Prisma.FieldRef<"Article", 'String'>
+  readonly editToken: Prisma.FieldRef<"Article", 'String'>
   readonly title: Prisma.FieldRef<"Article", 'String'>
   readonly content: Prisma.FieldRef<"Article", 'Json'>
   readonly createdAt: Prisma.FieldRef<"Article", 'DateTime'>

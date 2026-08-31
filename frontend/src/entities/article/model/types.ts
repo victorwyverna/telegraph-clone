@@ -11,3 +11,8 @@ export type ArticleInput = {
   title: string;
   content: Record<string, unknown>;
 };
+
+export type CreatedArticle = {
+  article: Article;
+  editToken: string;
+};

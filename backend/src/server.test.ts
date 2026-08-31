@@ -6,6 +6,7 @@ import { createApp } from './server.js';
 const article = {
   id: 1,
   slug: 'hello',
+  editToken: 'secret-token',
   title: 'Hello',
   content: {},
   createdAt: new Date(),
@@ -24,6 +25,12 @@ async function withApp(
         where.slug === 'hello' ? article : null,
       update: async () => article,
       delete: async () => article,
+      updateMany: async ({ where }: { where: { editToken: string } }) => ({
+        count: where.editToken === article.editToken ? 1 : 0,
+      }),
+      deleteMany: async ({ where }: { where: { editToken: string } }) => ({
+        count: where.editToken === article.editToken ? 1 : 0,
+      }),
     },
   };
   const storage = {
@@ -64,7 +71,11 @@ test('creates articles and rejects malformed article input', async () => {
     });
 
     assert.equal(created.status, 201);
-    assert.equal((await created.json()).slug, 'new-article');
+
+    const createdBody = await created.json();
+
+    assert.equal(createdBody.article.slug, 'new-article');
+    assert.equal(typeof createdBody.editToken, 'string');
 
     const cyrillicTitle = await fetch(`${baseUrl}/articles`, {
       method: 'POST',
@@ -73,7 +84,10 @@ test('creates articles and rejects malformed article input', async () => {
     });
 
     assert.equal(cyrillicTitle.status, 201);
-    assert.equal((await cyrillicTitle.json()).slug, 'moya-pervaya-yolka');
+    assert.equal(
+      (await cyrillicTitle.json()).article.slug,
+      'moya-pervaya-yolka'
+    );
 
     const malformed = await fetch(`${baseUrl}/articles`, {
       method: 'POST',
@@ -100,6 +114,36 @@ test('deletes an uploaded image and reports a missing file', async () => {
     });
 
     assert.equal(missing.status, 404);
+  });
+});
+
+test('requires an edit token to change or delete an article', async () => {
+  await withApp(async (baseUrl) => {
+    const noToken = await fetch(`${baseUrl}/articles/hello`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title: 'Changed' }),
+    });
+
+    assert.equal(noToken.status, 403);
+
+    const wrongToken = await fetch(`${baseUrl}/articles/hello`, {
+      method: 'DELETE',
+      headers: { 'X-Edit-Token': 'wrong-token' },
+    });
+
+    assert.equal(wrongToken.status, 403);
+
+    const updated = await fetch(`${baseUrl}/articles/hello`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Edit-Token': article.editToken,
+      },
+      body: JSON.stringify({ title: 'Changed' }),
+    });
+
+    assert.equal(updated.status, 200);
   });
 });
 
