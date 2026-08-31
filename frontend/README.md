@@ -1,75 +1,72 @@
-# React + TypeScript + Vite
+# Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Клиентское приложение Telegraph Clone. Позволяет создавать и редактировать статьи, загружать изображения и открывать опубликованные материалы.
 
-Currently, two official plugins are available:
+## Стек
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- React и TypeScript;
+- Vite;
+- React Router;
+- TanStack Query для запросов и кэша;
+- TanStack Form для формы редактора;
+- TipTap rich-text редактор;
+- CSS Modules и FSD-структура проекта.
 
-## React Compiler
+## Страницы
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+| Маршрут | Назначение |
+| --- | --- |
+| `/` | Создание статьи |
+| `/articles` | Список статей |
+| `/:slug` | Публичная страница статьи |
+| `/:slug/edit` | Редактирование и удаление статьи |
 
-## Expanding the ESLint configuration
+## Подготовка и запуск
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+Установите зависимости:
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+```bash
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
+Запустите приложение:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+```bash
+npm run dev
 ```
+
+По умолчанию оно будет доступно по адресу `http://localhost:5173` и обращается к API на `http://localhost:3000`.
+
+Чтобы использовать другой адрес API, создайте `.env.local`:
+
+```env
+VITE_API_URL=http://localhost:3000
+```
+
+Для полноценной локальной работы также запустите backend и его PostgreSQL/MinIO-инфраструктуру — инструкции есть в [README backend](../backend/README.md).
+
+## Команды
+
+```bash
+npm run dev          # запуск Vite в режиме разработки
+npm run build        # проверка TypeScript и production-сборка
+npm run preview      # просмотр собранного приложения
+npm run lint         # проверка ESLint
+npm run format       # форматирование исходников
+npm run format:check # проверка форматирования
+```
+
+## Структура `src`
+
+```text
+app/       # провайдеры, роутер и глобальные стили
+pages/     # страницы приложения
+widgets/   # крупные составные блоки интерфейса
+features/  # пользовательские сценарии, включая редактор
+entities/  # сущность Article, API и запросы
+shared/    # общие UI-компоненты, API-клиент и утилиты
+```
+
+## Production
+
+В production frontend собирается в Docker-образ и раздаётся Nginx. Запросы к `/api` проксируются во внутренний backend. Общая инструкция по развёртыванию находится в корневом [README](../README.md).
