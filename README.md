@@ -30,6 +30,13 @@ docker-compose.yml            # PostgreSQL и MinIO для разработки
 docker-compose.production.yml # production-стек
 ```
 
+Подробности по отдельным частям приложения: [frontend](frontend/README.md) и [backend](backend/README.md).
+
+## Требования
+
+- Node.js и npm;
+- Docker и Docker Compose для PostgreSQL и MinIO.
+
 ## Локальный запуск
 
 1. Запустить PostgreSQL и MinIO:
@@ -49,6 +56,7 @@ docker-compose.production.yml # production-стек
    ```
 
 После запуска frontend будет доступен по адресу `http://localhost:5173`, а API — по адресу `http://localhost:3000`.
+MinIO Console доступна по адресу `http://localhost:9001`.
 
 ## Production
 
@@ -58,6 +66,16 @@ docker-compose.production.yml # production-стек
 
 ```bash
 docker compose -f docker-compose.production.yml up -d --build
+```
+
+Публичный доступ получает только Caddy на портах `80` и `443`. PostgreSQL, MinIO, backend и frontend остаются доступны лишь внутри Docker-сети.
+
+## Резервные копии
+
+Скрипт `scripts/backup-production.sh` создаёт резервную копию PostgreSQL и копию файлов из MinIO в каталоге `backups/`. Его следует регулярно запускать на VPS и отправлять копии во внешнее хранилище.
+
+```bash
+./scripts/backup-production.sh
 ```
 
 ## TODO
