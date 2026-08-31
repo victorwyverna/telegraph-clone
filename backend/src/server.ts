@@ -11,6 +11,7 @@ import {
   uploadFile,
 } from './storage/s3.js';
 import { createUploadTokenService } from './services/upload-token-service.js';
+import { createRateLimiter } from './services/rate-limit-service.js';
 
 export type AppDependencies = Partial<RouteDependencies>;
 
@@ -27,6 +28,7 @@ export function createApp(dependencies: AppDependencies = {}) {
     storage: dependencies.storage ?? defaultStorage,
     uploadTokenService:
       dependencies.uploadTokenService ?? createUploadTokenService(),
+    rateLimiter: dependencies.rateLimiter ?? createRateLimiter(),
   };
 
   return createServer(async (request, response) => {

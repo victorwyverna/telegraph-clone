@@ -182,3 +182,20 @@ test('validates image uploads and handles CORS preflight', async () => {
     );
   });
 });
+
+test('limits repeated publications from one client', async () => {
+  await withApp(async (baseUrl) => {
+    const responses = await Promise.all(
+      Array.from({ length: 11 }, () =>
+        fetch(`${baseUrl}/articles`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title: 'New article', content: {} }),
+        })
+      )
+    );
+
+    assert.equal(responses.at(-1)?.status, 429);
+    assert.ok(responses.at(-1)?.headers.get('retry-after'));
+  });
+});
