@@ -8,7 +8,7 @@ const article = {
   slug: 'hello',
   editToken: 'secret-token',
   title: 'Hello',
-  content: {},
+  content: { type: 'doc', content: [{ type: 'paragraph' }] },
   createdAt: new Date(),
   updatedAt: new Date(),
 };
@@ -67,7 +67,7 @@ test('creates articles and rejects malformed article input', async () => {
     const created = await fetch(`${baseUrl}/articles`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title: 'New article', content: {} }),
+      body: JSON.stringify({ title: 'New article', content: article.content }),
     });
 
     assert.equal(created.status, 201);
@@ -80,7 +80,10 @@ test('creates articles and rejects malformed article input', async () => {
     const cyrillicTitle = await fetch(`${baseUrl}/articles`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title: 'Моя первая ёлка', content: {} }),
+      body: JSON.stringify({
+        title: 'Моя первая ёлка',
+        content: article.content,
+      }),
     });
 
     assert.equal(cyrillicTitle.status, 201);
@@ -88,6 +91,63 @@ test('creates articles and rejects malformed article input', async () => {
       (await cyrillicTitle.json()).article.slug,
       'moya-pervaya-yolka'
     );
+
+    const tiptapDocument = await fetch(`${baseUrl}/articles`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: 'Rich article',
+        content: {
+          type: 'doc',
+          content: [
+            {
+              type: 'heading',
+              attrs: { level: 2 },
+              content: [{ type: 'text', text: 'Heading' }],
+            },
+            {
+              type: 'blockquote',
+              content: [
+                {
+                  type: 'paragraph',
+                  content: [{ type: 'text', text: 'Quote' }],
+                },
+              ],
+            },
+            {
+              type: 'paragraph',
+              content: [
+                {
+                  type: 'text',
+                  text: 'Link',
+                  marks: [
+                    {
+                      type: 'link',
+                      attrs: {
+                        href: 'https://example.com',
+                        target: '_blank',
+                        rel: 'noopener noreferrer',
+                        class: null,
+                      },
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              type: 'image',
+              attrs: {
+                src: 'https://example.com/image.png',
+                alt: null,
+                title: null,
+              },
+            },
+          ],
+        },
+      }),
+    });
+
+    assert.equal(tiptapDocument.status, 201);
 
     const malformed = await fetch(`${baseUrl}/articles`, {
       method: 'POST',
@@ -97,6 +157,17 @@ test('creates articles and rejects malformed article input', async () => {
 
     assert.equal(malformed.status, 400);
     assert.deepEqual(await malformed.json(), { message: 'Invalid JSON' });
+
+    const invalidContent = await fetch(`${baseUrl}/articles`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: 'Unsafe article',
+        content: { type: 'doc', content: [{ type: 'script' }] },
+      }),
+    });
+
+    assert.equal(invalidContent.status, 400);
   });
 });
 
@@ -190,7 +261,10 @@ test('limits repeated publications from one client', async () => {
         fetch(`${baseUrl}/articles`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ title: 'New article', content: {} }),
+          body: JSON.stringify({
+            title: 'New article',
+            content: article.content,
+          }),
         })
       )
     );

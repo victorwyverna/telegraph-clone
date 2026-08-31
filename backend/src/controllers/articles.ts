@@ -2,17 +2,20 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import { z } from 'zod';
 
 import { readJsonBody, sendJson } from '../http.js';
+import { isTiptapContent } from '../lib/tiptap-content.js';
 import { type ArticleService } from '../services/article-service.js';
+
+const tiptapContentSchema = z.custom<Record<string, unknown>>(isTiptapContent);
 
 const articleSchema = z.object({
   slug: z.string().trim().min(1).optional(),
   title: z.string().trim().min(1),
-  content: z.record(z.string(), z.unknown()),
+  content: tiptapContentSchema,
 });
 const articleUpdateSchema = z
   .object({
     title: z.string().trim().min(1).optional(),
-    content: z.record(z.string(), z.unknown()).optional(),
+    content: tiptapContentSchema.optional(),
   })
   .refine((data) => data.title !== undefined || data.content !== undefined);
 

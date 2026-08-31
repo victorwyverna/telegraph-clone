@@ -2,6 +2,7 @@ import { generateHTML, type JSONContent } from '@tiptap/core';
 import Image from '@tiptap/extension-image';
 import Link from '@tiptap/extension-link';
 import StarterKit from '@tiptap/starter-kit';
+import DOMPurify from 'dompurify';
 
 export const articleExtensions = [
   StarterKit,
@@ -14,22 +15,34 @@ export function articleHtml(content: Record<string, unknown>) {
 }
 
 export function sanitizeHtml(html: string) {
-  const document = new DOMParser().parseFromString(html, 'text/html');
-
-  document
-    .querySelectorAll('script, style, iframe, object, embed')
-    .forEach((node) => node.remove());
-  document.querySelectorAll<HTMLElement>('*').forEach((element) => {
-    for (const attribute of Array.from(element.attributes)) {
-      const isEvent = attribute.name.toLowerCase().startsWith('on');
-      const isUrl = ['href', 'src'].includes(attribute.name.toLowerCase());
-      const isUnsafeUrl = isUrl && !/^(https?:)?\//i.test(attribute.value);
-
-      if (isEvent || isUnsafeUrl) element.removeAttribute(attribute.name);
-    }
+  return DOMPurify.sanitize(html, {
+    ALLOWED_TAGS: [
+      'p',
+      'h1',
+      'h2',
+      'h3',
+      'h4',
+      'h5',
+      'h6',
+      'blockquote',
+      'ul',
+      'ol',
+      'li',
+      'pre',
+      'code',
+      'br',
+      'hr',
+      'strong',
+      'em',
+      's',
+      'a',
+      'img',
+    ],
+    ALLOWED_ATTR: ['href', 'target', 'rel', 'src', 'alt', 'title'],
+    ALLOWED_URI_REGEXP: /^(?:(?:https?):|\/(?!\/))/i,
+    ALLOW_DATA_ATTR: false,
+    ALLOW_ARIA_ATTR: false,
   });
-
-  return document.body.innerHTML;
 }
 
 export function slugify(value: string) {
