@@ -100,20 +100,36 @@ test('creates articles and rejects malformed article input', async () => {
   });
 });
 
-test('deletes an uploaded image and reports a missing file', async () => {
+test('requires an upload delete token to delete an image', async () => {
   await withApp(async (baseUrl, state) => {
-    const deleted = await fetch(`${baseUrl}/uploads/unused.png`, {
+    const uploaded = await fetch(`${baseUrl}/uploads`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'image/png' },
+      body: Buffer.from('image'),
+    });
+    const { key, deleteToken } = (await uploaded.json()) as {
+      key: string;
+      deleteToken: string;
+    };
+
+    const forbidden = await fetch(`${baseUrl}/uploads/${key}`, {
       method: 'DELETE',
+    });
+    assert.equal(forbidden.status, 403);
+
+    const deleted = await fetch(`${baseUrl}/uploads/${key}`, {
+      method: 'DELETE',
+      headers: { 'X-Upload-Delete-Token': deleteToken },
     });
 
     assert.equal(deleted.status, 204);
-    assert.deepEqual(state.deletedKeys, ['unused.png']);
+    assert.deepEqual(state.deletedKeys, [key]);
 
     const missing = await fetch(`${baseUrl}/uploads/missing`, {
       method: 'DELETE',
+      headers: { 'X-Upload-Delete-Token': deleteToken },
     });
-
-    assert.equal(missing.status, 404);
+    assert.equal(missing.status, 403);
   });
 });
 

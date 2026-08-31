@@ -14,10 +14,12 @@ import {
   ArticleService,
 } from '../services/article-service.js';
 import { type Storage } from '../services/upload-service.js';
+import { type UploadTokenService } from '../services/upload-token-service.js';
 
 export type RouteDependencies = {
   prismaClient: ArticleRepository;
   storage: Storage;
+  uploadTokenService: UploadTokenService;
 };
 
 export async function routeRequest(
@@ -39,7 +41,12 @@ export async function routeRequest(
     );
 
   if (request.url === '/uploads' && request.method === 'POST')
-    return uploadFile(request, response, dependencies.storage);
+    return uploadFile(
+      request,
+      response,
+      dependencies.storage,
+      dependencies.uploadTokenService
+    );
 
   const articleMatch = request.url?.match(/^\/articles\/([^/?]+)$/);
 
@@ -72,7 +79,13 @@ export async function routeRequest(
       return getUpload(response, dependencies.storage, key);
 
     if (request.method === 'DELETE')
-      return deleteUpload(response, dependencies.storage, key);
+      return deleteUpload(
+        request,
+        response,
+        dependencies.storage,
+        dependencies.uploadTokenService,
+        key
+      );
   }
 
   return sendJson(response, 404, { message: 'Not found' });

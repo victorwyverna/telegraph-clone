@@ -42,14 +42,15 @@ export const articleApi = {
     }),
 
   uploadImage: (file: File) =>
-    apiRequest<{ key: string }>('/uploads', {
+    apiRequest<{ key: string; deleteToken: string }>('/uploads', {
       method: 'POST',
       headers: { 'Content-Type': file.type },
       body: file,
     }),
 
-  removeImage: (key: string) =>
+  removeImage: (key: string, deleteToken: string) =>
     apiRequest<void>(`/uploads/${encodeURIComponent(key)}`, {
       method: 'DELETE',
+      headers: { 'X-Upload-Delete-Token': deleteToken },
     }),
 };

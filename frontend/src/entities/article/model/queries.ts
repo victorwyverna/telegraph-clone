@@ -74,5 +74,8 @@ export function useUploadImage() {
 }
 
 export function useDeleteImage() {
-  return useMutation({ mutationFn: articleApi.removeImage });
+  return useMutation({
+    mutationFn: ({ key, deleteToken }: { key: string; deleteToken: string }) =>
+      articleApi.removeImage(key, deleteToken),
+  });
 }

@@ -7,6 +7,7 @@ import {
   MAX_IMAGE_SIZE_BYTES,
   type Storage,
 } from '../services/upload-service.js';
+import { type UploadTokenService } from '../services/upload-token-service.js';
 
 async function readImageBody(request: IncomingMessage) {
   const contentLength = Number(request.headers['content-length']);
@@ -41,7 +42,8 @@ async function readImageBody(request: IncomingMessage) {
 export async function uploadFile(
   request: IncomingMessage,
   response: ServerResponse,
-  storage: Storage
+  storage: Storage,
+  tokenService: UploadTokenService
 ) {
   const contentType = request.headers['content-type']?.split(';')[0] ?? '';
   const extension = imageExtension(contentType);
@@ -69,7 +71,10 @@ export async function uploadFile(
     return sendJson(response, 502, { message: 'Image storage is unavailable' });
   }
 
-  return sendJson(response, 201, { key });
+  return sendJson(response, 201, {
+    key,
+    deleteToken: tokenService.createDeleteToken(key),
+  });
 }
 
 export async function getUpload(
@@ -93,10 +98,20 @@ export async function getUpload(
 }
 
 export async function deleteUpload(
+  request: IncomingMessage,
   response: ServerResponse,
   storage: Storage,
+  tokenService: UploadTokenService,
   key: string
 ) {
+  const token = request.headers['x-upload-delete-token'];
+
+  if (
+    typeof token !== 'string' ||
+    !tokenService.hasValidDeleteToken(key, token)
+  )
+    return sendJson(response, 403, { message: 'Invalid upload delete token' });
+
   try {
     await storage.deleteFile(key);
 

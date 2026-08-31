@@ -49,6 +49,7 @@ export function ArticleEditor({ article, articleSlug, editToken }: Props) {
   const deleteImage = useDeleteImage();
   const imageInputRef = useRef<HTMLInputElement>(null);
   const uploadedImageKeys = useRef(new Set<string>());
+  const imageDeleteTokens = useRef(new Map<string, string>());
   const isRestoringContent = useRef(false);
   const [error, setError] = useState('');
   const isEditing = Boolean(articleSlug);
@@ -70,13 +71,21 @@ export function ArticleEditor({ article, articleSlug, editToken }: Props) {
 
       for (const key of uploadedImageKeys.current) {
         if (!currentKeys.has(key)) {
-          void deleteImage.mutateAsync(key).catch((reason: unknown) => {
-            setError(
-              reason instanceof Error
-                ? reason.message
-                : 'Не удалось удалить изображение'
-            );
-          });
+          const deleteToken = imageDeleteTokens.current.get(key);
+
+          if (!deleteToken) continue;
+
+          imageDeleteTokens.current.delete(key);
+
+          void deleteImage
+            .mutateAsync({ key, deleteToken })
+            .catch((reason: unknown) => {
+              setError(
+                reason instanceof Error
+                  ? reason.message
+                  : 'Не удалось удалить изображение'
+              );
+            });
         }
       }
 
@@ -156,7 +165,9 @@ export function ArticleEditor({ article, articleSlug, editToken }: Props) {
     setError('');
 
     try {
-      const { key } = await uploadImage.mutateAsync(file);
+      const { key, deleteToken } = await uploadImage.mutateAsync(file);
+
+      imageDeleteTokens.current.set(key, deleteToken);
 
       editor
         ?.chain()

@@ -10,6 +10,7 @@ import {
   isMissingObjectError,
   uploadFile,
 } from './storage/s3.js';
+import { createUploadTokenService } from './services/upload-token-service.js';
 
 export type AppDependencies = Partial<RouteDependencies>;
 
@@ -24,6 +25,8 @@ export function createApp(dependencies: AppDependencies = {}) {
   const routeDependencies: RouteDependencies = {
     prismaClient: dependencies.prismaClient ?? prisma,
     storage: dependencies.storage ?? defaultStorage,
+    uploadTokenService:
+      dependencies.uploadTokenService ?? createUploadTokenService(),
   };
 
   return createServer(async (request, response) => {
@@ -34,7 +37,7 @@ export function createApp(dependencies: AppDependencies = {}) {
     );
     response.setHeader(
       'Access-Control-Allow-Headers',
-      'Content-Type, X-Edit-Token'
+      'Content-Type, X-Edit-Token, X-Upload-Delete-Token'
     );
 
     if (request.method === 'OPTIONS') {
